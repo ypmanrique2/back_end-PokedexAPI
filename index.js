@@ -1,48 +1,36 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Simulación de una futura Base de Datos en Memoria (Mock)
-let userProfile = {
-    username: 'iptdevs',
-    preferences: ['Acción', 'Comedia'] // Preferencias de películas por defecto
-};
+const SECRET = 'pokedex_secret';
 
-// 1. Endpoint Login
 app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    
-    // Credenciales seguras solicitadas
-    if (username === 'iptdevs' && password === '123456') {
-        // Aquí debe devolver un JWT
-        return res.status(200).json({ 
-            token: 'fake-jwt-token-123456', 
-            user: userProfile 
-        });
+    const { nickname, password } = req.body;
+
+    if (nickname === 'iptdevs' && password === '123456') {
+        const token = jwt.sign({ nickname }, SECRET, { expiresIn: '1h' });
+        return res.json({ token });
     }
-    return res.status(401).json({ message: 'Credenciales inválidas' });
+
+    res.status(401).json({ message: 'Credenciales inválidas' });
 });
 
-// 2. Endpoint Perfil (GET y PUT)
 app.get('/api/profile', (req, res) => {
-    // Aquí se valida el token en un middleware
-    res.json(userProfile);
+    res.json({
+        nickname: 'iptdevs',
+        moviePreferences: ['Acción', 'Ciencia Ficción']
+    });
 });
 
-app.post('/api/profile', (req, res) => {
-    const { preferences } = req.body;
-    if (preferences) {
-        userProfile.preferences = preferences;
-        return res.status(200).json({ message: 'Perfil actualizado', user: userProfile });
-    }
-    res.status(400).json({ message: 'Datos incompletos' });
+app.put('/api/profile', (req, res) => {
+    res.json({ message: 'Perfil actualizado correctamente' });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Backend corriendo en http://localhost:${PORT}`);
+app.listen(3000, () => {
+    console.log('Backend running on http://localhost:3000');
 });
